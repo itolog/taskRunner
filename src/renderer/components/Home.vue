@@ -118,6 +118,8 @@ const DB_FILE = "db.json";
       ipcRenderer.on('get-path-dir', (event, file) => {
         this.dirPath = file;
       });
+      // Запуск задач из Трея
+      ipcRenderer.on('run-from-main', this.runn);
     }
   }
 </script>
