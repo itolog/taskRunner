@@ -54,6 +54,25 @@ const template = [
         click() {
           openFile()
         }
+      },
+      {
+        label: 'Очистить список задач',
+        accelerator: 'CmdOrCtrl+D',
+        click() {
+          clearList()
+        }
+      }
+    ]
+  },
+  {
+    label: 'Папка',
+    submenu: [
+      {
+        label: 'путь к папке',
+        accelerator: 'CmdOrCtrl+A',
+        click() {
+          getPath()
+        }
       }
     ]
   },
@@ -104,4 +123,23 @@ function openFile() {
 
   // Send filedContent to renderer
   mainWindow.webContents.send('new-file', file);
+}
+
+function clearList() {
+  mainWindow.webContents.send('clear-file');
+}
+
+function getPath() {
+  // Opens file dialog looking for markdown
+  const dir = dialog.showOpenDialog(mainWindow, {
+    properties: ['openDirectory']
+  });
+
+  // If no dir
+  if (!dir) return;
+
+  const file = dir[0]; 
+  // console.log(file);
+  // Send filedContent to renderer
+  mainWindow.webContents.send('get-path-dir', file);
 }
