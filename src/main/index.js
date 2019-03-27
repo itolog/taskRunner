@@ -53,12 +53,19 @@ function createWindow () {
   ]);
   tray.setContextMenu(contextMenu);
   tray.setToolTip("запуск задач");
+
   // END CREATE WINDOW
 }
 // AUTO START APP WHITH WINDOWS
+const exeName = app.getPath("exe");
 app.setLoginItemSettings({
   openAtLogin: 'true',
-  openAsHidden : 'true'
+  openAsHidden : 'true',
+  path: exeName,
+  args: [
+    '--processStart', `"${exeName}"`,
+    '--process-start-args', `"--hidden"`
+  ]
 })
 // 
 app.on('ready', createWindow)

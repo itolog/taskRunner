@@ -1,5 +1,8 @@
 <template>
-   <div class="wrapper">
+   <div class="wrapper"
+   @dragover="dragOnOver"
+   @dragenter="dragOnEnter"
+   @drop="dropCancel">
     <main class="main">
       <!-- HEader add TASK -->
       <div class="task">
@@ -11,9 +14,16 @@
         <button class="myButton myButton__add" @click="add">добавить</button>
       </div>
       <!-- INFO PATH FILE -->
-      <div class="pathFile">{{this.filePath}}</div>
+     
       <!-- SECTION INFO LIST OF TASKS -->
       <div class="tasks-info">
+        <div 
+          ref="drop"
+          class="drop" 
+          @drop="dropOn($event)">
+              <p class="drop--text" v-if="this.filePath == undefined">перетащите исполняемый файл</p>
+              <div class="pathFile" v-else>{{this.filePath}}</div>
+        </div>
         <ul class="list">
           <li class="list--item" v-for="(item, index) in this.tasks" :key="index">
            {{index +=1}}: {{ item.path.split("\\").slice(-1).toString() }}
@@ -38,8 +48,9 @@ const { ipcRenderer, dialog } = window.require('electron');
 const { spawn } = require('child_process');
 const _path = require("path");
 const fs = require("fs");
-
 const DB_FILE = "db.json";
+
+import getPath from '../../utils/getPath.js';
 
   export default {
     name: 'Home',
@@ -77,6 +88,7 @@ const DB_FILE = "db.json";
         }
         this.filePath = undefined;
         this.message = "";
+        this.$refs.drop.style.opacity = '';
       },
       // Запуск задач
       runn () {
@@ -94,6 +106,48 @@ const DB_FILE = "db.json";
             });
            }
         });
+      },
+      // DRAG AND DROP
+      dragOnOver(e) {
+        e.preventDefault();
+      },
+      // Обработка перетаскивания
+      dropOn(ev) {
+        ev.preventDefault()
+        const file = ev.dataTransfer.files[0].path;
+        const exe = file.endsWith("exe");
+        const lnk = file.endsWith("lnk");
+        
+         if(exe) {
+           this.filePath = file;
+         }else if(lnk) {
+          // ф-ция *** Оригинальный путь к файлу с 'фала.lnk' ***
+           getPath(file).then(path => {
+             if(path.endsWith("exe")) {
+                this.filePath = path
+             } else {
+               alert("Запустить можно только файлы '.exe'");
+               this.$refs.drop.style.opacity = '';
+             }
+           });
+         }else {
+          alert("Запустить можно только файлы '.exe'");
+         }
+         
+        this.$refs.drop.style.opacity = 0.8;
+      },
+      // Стили для секций(запрет или разрешение на перетаскивание)
+      dragOnEnter(ev) {
+         ev.preventDefault();
+         if(ev.target.className === "drop" || ev.target.className === "drop--text") {
+           this.$refs.drop.style.opacity = 0.6;
+         } else {
+            this.$refs.drop.style.opacity = '';
+         }
+      },
+      // Запрет на перетаскивание
+      dropCancel(ev) {
+        ev.preventDefault();
       }
     },
     mounted() {
@@ -136,6 +190,7 @@ const DB_FILE = "db.json";
   body { font-family: 'Source Sans Pro', sans-serif; }
 
   .wrapper {
+    user-select: none;
     display: flex;
     background: rgba(242,246,248,1);
     background: linear-gradient(135deg, rgba(242,246,248,1) 0%, rgba(216,225,231,1) 50%, rgba(181,198,208,1) 51%, rgba(224,239,249,1) 100%);
@@ -155,12 +210,12 @@ const DB_FILE = "db.json";
     height: 40px;
     justify-content: space-around;
     margin-top: 20px;
-    margin-bottom: 10px;
+    margin-bottom: 30px;
   }
   /* FILE INFO PATH */
   .pathFile{
-    margin-bottom: 10px;
-    height: 20px;
+    height: 100px;
+    color: aquamarine;
   }
   /* Button File */
   .myButton {
@@ -226,8 +281,9 @@ const DB_FILE = "db.json";
 
 /* Section INFO */
 .tasks-info{
+  position: relative;
   display: flex;
-   flex: 4;
+  flex: 4;
   width: 100%;
   height: 70%;
   padding: 10px 10px 0 10px;
@@ -260,5 +316,26 @@ const DB_FILE = "db.json";
   box-shadow: inset -4px 0px 16px 1px rgba(204, 162, 162, 0.75);
   padding: 5px;
   max-height: 30px;
+}
+
+/* DROP SECTION  */
+.drop{
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background: #000;
+  opacity: 0.4;
+  top: 0;
+  left: 0;
+  border: 5px dashed white;
+}
+.drop--text{
+  color: white;
+  font-size: 22px;
+  font-family: Geneva, Arial, Helvetica, sans-serif;
+  height: 100px;
 }
 </style>
