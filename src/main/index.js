@@ -1,5 +1,11 @@
-import { app, BrowserWindow, dialog, Menu, Tray} from 'electron'
+import { app, BrowserWindow, dialog, Menu, Tray} from 'electron';
+const AutoLaunch = require('auto-launch');
 const path = require("path");
+
+let autoLaunch = new AutoLaunch({
+  name: "run-task",
+  isHidden: true
+});
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
@@ -20,15 +26,34 @@ const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
 
+  const isAlreadyRunning = app.makeSingleInstance(() => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore()
+      }
+  
+      // Prevent flash on startup when in dark-mode
+      mainWindow.webContents.on('did-finish-load', function() {
+        setTimeout(function() {
+          mainWindow.show()
+        }, 60)
+      })
+    }
+  })
+  
+  if (isAlreadyRunning) {
+    app.quit()
+  }
+
 function createWindow () {
   
   /**
    * Initial window options
    */
   mainWindow = new BrowserWindow({
-    height: 563,
+    height: 600,
     useContentSize: true,
-    width: 1000
+    width: 800
   })
 
   mainWindow.loadURL(winURL)
@@ -54,19 +79,14 @@ function createWindow () {
   tray.setContextMenu(contextMenu);
   tray.setToolTip("запуск задач");
 
+  // AUTO START APP WHITH WINDOWS
+  autoLaunch.enable();
+  autoLaunch.isEnabled().then((isEnabled) => {
+    if (!isEnabled) autoLaunch.enable();
+  });
   // END CREATE WINDOW
 }
-// AUTO START APP WHITH WINDOWS
-const exeName = app.getPath("exe");
-app.setLoginItemSettings({
-  openAtLogin: 'true',
-  openAsHidden : 'true',
-  path: exeName,
-  args: [
-    '--processStart', `"${exeName}"`,
-    '--process-start-args', `"--hidden"`
-  ]
-})
+
 // 
 app.on('ready', createWindow)
 
