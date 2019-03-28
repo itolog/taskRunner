@@ -52,12 +52,14 @@ function createWindow () {
    */
   mainWindow = new BrowserWindow({
     height: 600,
-    useContentSize: true,
-    width: 800
+    width: 800,
+    backgroundColor: '#CEC1E2'
   })
 
   mainWindow.loadURL(winURL)
-
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show()
+  })
   mainWindow.on('closed', () => {
     mainWindow = null
   })
@@ -69,6 +71,22 @@ function createWindow () {
         mainWindow.webContents.send('run-from-main')
       }
 
+    },
+    { type: 'separator'
+    },
+    { label: 'открыть',
+      click: () => {
+        showApp();
+      }
+
+    },
+    { label: 'скрыть',
+      click: () => {
+        hideApp();
+      }
+    },
+    {
+     type: 'separator'
     },
     { label: 'выход',
     click: () => {
@@ -84,11 +102,13 @@ function createWindow () {
   autoLaunch.isEnabled().then((isEnabled) => {
     if (!isEnabled) autoLaunch.enable();
   });
+  // mainWindow.hide();
   // END CREATE WINDOW
 }
 
 // 
 app.on('ready', createWindow)
+// app.hide()
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -139,14 +159,13 @@ const template = [
   {
     label: 'Вид',
     submenu: [
-      { role: 'reload' },
-      { role: 'forcereload' },
+      { role: 'togglefullscreen' },
       { type: 'separator' },
-      { role: 'resetzoom' },
-      { role: 'zoomin' },
-      { role: 'zoomout' },
-      { type: 'separator' },
-      { role: 'togglefullscreen' }
+      { label: 'скрыть в трэй',
+      click: () => {
+        hideApp();
+      }
+    },
     ]
   }
 ];
@@ -188,4 +207,12 @@ function getPath() {
   // console.log(file);
   // Send filedContent to renderer
   mainWindow.webContents.send('get-path-dir', file);
+}
+
+function showApp() {
+  mainWindow.show();
+}
+
+function hideApp() {
+  mainWindow.hide();
 }

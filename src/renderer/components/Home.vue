@@ -24,20 +24,22 @@
               <p class="drop--text" v-if="this.filePath == undefined">перетащите исполняемый файл</p>
               <div class="pathFile" v-else>{{this.filePath}}</div>
         </div>
-        <ul class="list">
-          <li class="list--item" v-for="(item, index) in this.tasks" :key="index">
-           {{index +=1}}: {{ item.path.split("\\").slice(-1).toString() }}
-          </li>
-        </ul>
+          <transition-group name="fade" tag="ul" class="list">
+            <li class="list--item" v-for="(item, index) in this.tasks" :key="item.id">
+              {{index +=1}}: {{ item.path.split("\\").slice(-1).toString() }}
+            </li>
+          </transition-group>
       </div>
       <!-- RUNN TASK SECTION -->
       <div class="runnTaskSection">
-        <button 
-          class="myButton myButton__run" 
-          v-if="tasks.length > 0"
-          @click="runn">
-            запустить
-        </button>
+        <transition name="btn">
+          <button 
+            class="myButton myButton__run" 
+            v-if="tasks.length > 0"
+            @click="runn">
+              запустить
+          </button>
+        </transition>
       </div>
     </main>
   </div>
@@ -79,8 +81,9 @@ import getPath from '../../utils/getPath.js';
       add() {
         const path = this.filePath;
         const args = this.message;
+        let id = (path + 3) + Math.random();
         if(this.filePath) {
-            this.tasks.push({path, args});
+            this.tasks.push({path, args, id});
             // Добавление в ТипоБазуДанных
             this.dbWrite()
             //Чтение из ТипоБазыДанных
@@ -121,6 +124,7 @@ import getPath from '../../utils/getPath.js';
          if(exe) {
            this.filePath = file;
          }else if(lnk) {
+             this.filePath = "ПУТЬ ОБРАБАТЫВАЕТСЯ ..."
           // ф-ция *** Оригинальный путь к файлу с 'фала.lnk' ***
            getPath(file).then(path => {
              if(path.endsWith("exe")) {
@@ -337,5 +341,35 @@ import getPath from '../../utils/getPath.js';
   font-size: 22px;
   font-family: Geneva, Arial, Helvetica, sans-serif;
   height: 100px;
+}
+/* ANIMATION */
+.fade-enter-active, .fade-leave-active {
+  animation: slideInUp .5s;
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+ animation: slideInUp .5s reverse;
+}
+
+.slideInUp {
+  animation-name: slideInUp;
+  animation-duration: 1s;
+  animation-fill-mode: both;
+  }
+  @keyframes slideInUp {
+  0% {
+    transform: translateY(70%);
+    visibility: visible;
+    }
+  100% {
+    transform: translateY(0);
+    }
+  }
+
+  /* ANIM BTN */
+  .btn-enter-active, .btn-leave-active {
+  transition: opacity .5s;
+}
+.btn-enter, .btn-leave-to{
+  opacity: 0;
 }
 </style>
