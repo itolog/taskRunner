@@ -50,7 +50,8 @@ const { ipcRenderer, dialog } = window.require('electron');
 const { spawn } = require('child_process');
 const _path = require("path");
 const fs = require("fs");
-const DB_FILE = "db.json";
+const DB_NAME =  _path.basename(__dirname) + "-db.json";
+const DB_FILE = _path.join(DB_NAME);
 
 import getPath from '../../utils/getPath.js';
 
@@ -67,15 +68,13 @@ import getPath from '../../utils/getPath.js';
   
     methods: {
       dbWrite() {
-        fs.writeFile(DB_FILE, JSON.stringify(this.tasks),'utf8', (err) => {
-            if (err) throw err;
-        })
+        localStorage.setItem('myTasks', JSON.stringify(this.tasks));
       },
       dbRead() {
-        fs.readFile(DB_FILE, 'utf8',(err, data) => {
-          if (err) throw err;
-          this.tasks = JSON.parse(data)
-        });
+         const tasks = localStorage.getItem('myTasks');
+          if(tasks) {
+            this.tasks = JSON.parse(tasks);
+          }
       },
       // Добавление задачи в список
       add() {
@@ -84,6 +83,7 @@ import getPath from '../../utils/getPath.js';
         let id = (path + 3) + Math.random();
         if(this.filePath) {
             this.tasks.push({path, args, id});
+           
             // Добавление в ТипоБазуДанных
             this.dbWrite()
             //Чтение из ТипоБазыДанных
@@ -156,21 +156,15 @@ import getPath from '../../utils/getPath.js';
     },
     mounted() {
       //Чтение из ТипоБазыДанных
-      if(fs.existsSync(process.cwd() + "\\"+DB_FILE)) {
-        this.dbRead();
-      }
+       this.dbRead();
       // Путь к файлу из Main process
       ipcRenderer.on('new-file', (event, fileContent) => {
         this.filePath = fileContent
       });
       // Очистка списка задач
       ipcRenderer.on('clear-file', () => {
-        if(fs.existsSync(process.cwd() + "\\"+DB_FILE)) {
-           fs.unlink(DB_FILE, (err) => {
-            if (err) throw err;
-            this.tasks = [];
-          });
-        }
+        localStorage.removeItem('myTasks');
+        this.tasks = [];
       });
       // ПУТЬ К ПАПКЕ
       ipcRenderer.on('get-path-dir', (event, file) => {

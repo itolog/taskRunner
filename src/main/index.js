@@ -3,8 +3,7 @@ const AutoLaunch = require('auto-launch');
 const path = require("path");
 
 let autoLaunch = new AutoLaunch({
-  name: "run-task",
-  isHidden: true
+  name: "run-task"
 });
 /**
  * Set `__static` path to static files in production
@@ -55,11 +54,8 @@ function createWindow () {
     width: 800,
     backgroundColor: '#CEC1E2'
   })
-
+  
   mainWindow.loadURL(winURL)
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show()
-  })
   mainWindow.on('closed', () => {
     mainWindow = null
   })
@@ -96,19 +92,28 @@ function createWindow () {
   ]);
   tray.setContextMenu(contextMenu);
   tray.setToolTip("запуск задач");
-
+  tray.on('click', () => {
+    mainWindow.isVisible() ? mainWindow.hide() : mainWindow.show()
+  })
+  mainWindow.on('show', () => {
+    tray.setHighlightMode('always')
+  })
+  mainWindow.on('hide', () => {
+    tray.setHighlightMode('never')
+  })
   // AUTO START APP WHITH WINDOWS
   autoLaunch.enable();
   autoLaunch.isEnabled().then((isEnabled) => {
     if (!isEnabled) autoLaunch.enable();
   });
-  // mainWindow.hide();
+  // Скрыть в трей при входе в систему
+  mainWindow.hide();
+  
   // END CREATE WINDOW
 }
 
 // 
 app.on('ready', createWindow)
-// app.hide()
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
